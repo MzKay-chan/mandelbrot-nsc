@@ -42,8 +42,7 @@ def mandelbrot_chunk(row_start, row_end, N,
 if __name__ == "__main__":
     N, max_iter = 1024, 100
     X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
-    cluster = LocalCluster(n_workers=8, threads_per_worker=1)
-    client = Client(cluster)
+    client = Client("tcp://10.92.1.226:8786")
     client.run(lambda: mandelbrot_chunk(0, 8, 8, X_MIN, X_MAX, # warm up all workers
     Y_MIN, Y_MAX, 10))
     times = []
