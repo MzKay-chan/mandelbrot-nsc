@@ -7,6 +7,7 @@ class mandelbrot(self):
         """
 
         # Todo: implement something
+        # Add an extra comment
         pass
 
 
