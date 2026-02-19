@@ -1,9 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import time 
+import time, statistics 
 class mandelbrot:
     
     #TODO: I need to make the naive complex matrix with not numpy
+    def benchmark(self, func, c, max_iter, n_runs=3):
+        "Time func, returns median of n_runs"
+        times =[]
+        for _ in range(n_runs):
+            t0 =time.perf_counter()
+            result = func(c, max_iter)
+            times.append(time.perf_counter() - t0)
+        median_t = statistics.median(times)
+        print(f"Median: {median_t : .4f}s "
+            f"(min={min(times):.4f}, max={max(times):.4f}")
+        return median_t, result
 
     def complex_matrix(self, xmin,xmax,ymin,ymax, density):
         """
@@ -17,18 +28,8 @@ class mandelbrot:
         re = np.linspace(xmin,xmax, int((xmax-xmin) * density) )
         im = np.linspace(ymin,ymax, int((ymax-ymin) * density) )
         return re[np.newaxis, :] + im[:, np.newaxis] * 1j
-
-
-    def is_stable(self, c, max_iter):
-        """
-        Function that goes over each point c in grid
-        """
-        z = 0
-        for _ in range(max_iter):
-            z = z ** 2 + c
-        return abs(z) <= 2
-
         
+
     def escape_time(self, c, max_iter):
         z = np.zeros_like(c)
         iteration_counts = np.zeros(c.shape)
@@ -43,12 +44,9 @@ class mandelbrot:
 
 if __name__ == "__main__":
     mb = mandelbrot()
-    time_start = time.time()
     c = mb.complex_matrix(-2, 0.5, -1.5, 1.5, density=1024)
-    iterations = mb.escape_time(c, max_iter=100)
-    time_stop = time.time()
-    elapsed_time = time_stop - time_start
-    print(elapsed_time)
+    t, iterations = mb.benchmark(mb.escape_time, c, max_iter=100, n_runs=5) #Runs my mandelbrot algo 5 times 
+
     # Plot with colormap
     plt.figure(figsize=(10, 8))
     plt.imshow(iterations, extent=[-2, 0.5, -1.5, 1.5], 
