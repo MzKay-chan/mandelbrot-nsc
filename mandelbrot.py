@@ -34,17 +34,18 @@ class mandelbrot:
         z = np.zeros_like(c)
         iteration_counts = np.zeros(c.shape)
         
+        
         for i in range(max_iter):
             mask = np.abs(z) <= 2  # Points that haven't escaped yet
             z[mask] = z[mask] ** 2 + c[mask]
-            iteration_counts[mask] = i
+            iteration_counts[mask] += 1 
         
         return iteration_counts
 
 
 if __name__ == "__main__":
     mb = mandelbrot()
-    c = mb.complex_matrix(-2, 0.5, -1.5, 1.5, density=1024)
+    c = mb.complex_matrix(-2, 1, -1.5, 1.5, density=1024)
     t, iterations = mb.benchmark(mb.escape_time, c, max_iter=100, n_runs=5) #Runs my mandelbrot algo 5 times 
 
     # Plot with colormap
