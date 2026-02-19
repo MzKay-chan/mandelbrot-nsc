@@ -1,18 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+import time 
 class mandelbrot:
+    
+    #TODO: I need to make the naive complex matrix with not numpy
 
     def complex_matrix(self, xmin,xmax,ymin,ymax, density):
         """
         Function that creates the matrix of complex numbers with some density between the max and min values for x,y
-
-        xmin = int()
-        xmax = int()
-        ymin = int()
-        ymax = int()
         
-        density = int()
+        This is optimized using numpy
 
         Returns = vectors with with calues for height and width
 
@@ -46,9 +43,12 @@ class mandelbrot:
 
 if __name__ == "__main__":
     mb = mandelbrot()
-    c = mb.complex_matrix(-2, 0.5, -1.5, 1.5, density=500)
+    time_start = time.time()
+    c = mb.complex_matrix(-2, 0.5, -1.5, 1.5, density=1024)
     iterations = mb.escape_time(c, max_iter=100)
-
+    time_stop = time.time()
+    elapsed_time = time_stop - time_start
+    print(elapsed_time)
     # Plot with colormap
     plt.figure(figsize=(10, 8))
     plt.imshow(iterations, extent=[-2, 0.5, -1.5, 1.5], 
