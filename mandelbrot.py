@@ -8,11 +8,11 @@ class mandelbrot:
         "Time func, returns median of n_runs"
         times =[]
         for _ in range(n_runs):
-            t0 =time.perf_counter()
+            t0 = time.perf_counter()
             result = func(c, max_iter)
             times.append(time.perf_counter() - t0)
         median_t = statistics.median(times)
-        print(f"Median: {median_t : .4f}s "
+        print(f"Median: {median_t :.4f}s "
             f"(min={min(times):.4f}, max={max(times):.4f}")
         return median_t, result
 
@@ -25,8 +25,8 @@ class mandelbrot:
         Returns = vectors with with calues for height and width
 
         """
-        re = np.linspace(xmin,xmax, int((xmax-xmin) * density) )
-        im = np.linspace(ymin,ymax, int((ymax-ymin) * density) )
+        re = np.linspace(xmin,xmax, density )
+        im = np.linspace(ymin,ymax, density )
         return re[np.newaxis, :] + im[:, np.newaxis] * 1j
         
 
