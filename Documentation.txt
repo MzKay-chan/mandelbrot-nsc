@@ -1,0 +1,22 @@
+First Lecture: 
+Implemented the mandelbrot
+I accidently made my first implementation using numpy to generate the matrix
+
+Second Lecture:
+During this lecture we spent time going through using numpy for optimisation.
+I spent most of the time during this class trying to figure out, what was wrong with my code.
+Since i knew i already used numpy - but i still got very slow results.
+Found the issue, i was making a matrix which was about 3 times bigger that what i was trying to make. 
+Got a speed up of about 2.7X
+
+Third Lecture:
+Code omtimisation and profiling
+Now we are looking at futher optimisation (numba)
+
+Understanding the algorithmic intensisty, we can figure out what we need to focus on when optimising
+< 1 FLOPs/byte = Memory-bound (Numpy will help here)
+1-10 FLOPs/byte = Balanced (Both cache optimisation and compute optimisations will help here)
+> 10 FLOPs/byte = Compute-bound (Numba or JIT will help here)
+
+
+
