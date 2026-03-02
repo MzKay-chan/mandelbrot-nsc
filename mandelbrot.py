@@ -202,17 +202,57 @@ if __name__ == "__main__":
                 c = x[j] + 1j * y[i]
                 result[i,j] = mandelbrot_point_numba(c, max_iter)
 
+    @njit
+    def mandelbrot_numba_typed(xmin, xmax, ymin, ymax, height, width, max_iter=100, dtype=np.float64):
+        x = np.linspace(xmin, xmax, width).astype(dtype)
+        y = np.linspace(ymin, ymax, height).astype(dtype)
+        result = np.zeros((height, width), dtype = np.int32)
+        for i in range(height):
+            for j in range(width):
+                c = x[j] + 1j * y[i]
+                result[i,j] = mandelbrot_point_numba(c, max_iter)
+        return result
+
+    def mandelbrot_numba_typed16(xmin, xmax, ymin, ymax, height, width, max_iter=100, dtype=np.float64):
+        x = np.linspace(xmin, xmax, width).astype(dtype)
+        y = np.linspace(ymin, ymax, height).astype(dtype)
+        result = np.zeros((height, width), dtype = np.int32)
+        for i in range(height):
+            for j in range(width):
+                c = x[j] + 1j * y[i]
+                result[i,j] = mandelbrot_point_numba(c, max_iter)
+        return result
 
     #Numba benchmarking for both implementations
-    mandelbrot_numba_naive(-2, 1, -1.5, 1.5, 1024, 1024, 100)
-    mandelbrot_hybrid(-2, 1, -1.5, 1.5, 1024, 1024, 100)
+    # mandelbrot_numba_naive(-2, 1, -1.5, 1.5, 1024, 1024, 100)
+    # mandelbrot_hybrid(-2, 1, -1.5, 1.5, 1024, 1024, 100)
+    #
+    # t_naive = mb.benchmark(mandelbrot_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+    # t_numpy = mb.benchmark(mandelbrot_numpy, (c, 100))
+    # t_full = mb.benchmark(mandelbrot_numba_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+    # t_hybrid = mb.benchmark(mandelbrot_hybrid, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+    #
+    # print(f" Naive:     {t_naive:.3f}s")
+    # print(f" Numpy:       {t_numpy:.3f}s    ({t_naive/t_numpy:1f}x)")
+    # print(f" Fully compiled:        {t_full:.3f}s       ({t_naive/t_full:.3f}x)")
 
-    t_naive = mb.benchmark(mandelbrot_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
-    t_numpy = mb.benchmark(mandelbrot_numpy, (c, 100))
-    t_full = mb.benchmark(mandelbrot_numba_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
-    t_hybrid = mb.benchmark(mandelbrot_hybrid, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+    #Numba data type testing:
+    for dtype in [np.float16, np.float32, np.float64]:
+        t0 = time.perf_counter()
+        if dtype == np.float16:
+            mandelbrot_numba_typed16(-2, 1, -1.5, 1.5, 1024, 1024, 100, dtype=dtype)
+        else:
+            mandelbrot_numba_typed(-2, 1, -1.5, 1.5, 1024, 1024, 100, dtype=dtype)
+        print(f"{dtype.__name__}: {time.perf_counter()-t0:.3f}s")
 
-    print(f" Naive:     {t_naive:.3f}s")
-    print(f" Numpy:       {t_numpy:.3f}s    ({t_naive/t_numpy:1f}x)")
-    print(f" Fully compiled:        {t_full:.3f}s       ({t_naive/t_full:.3f}x)")
+    r16 = mandelbrot_numba_typed16(-2, 1, -1.5, 1.5, 1024, 1024, 100, dtype=np.float16)
+    r32 = mandelbrot_numba_typed(-2, 1, -1.5, 1.5, 1024, 1024, 100, dtype=np.float32)
+    r64 = mandelbrot_numba_typed(-2, 1, -1.5, 1.5, 1024, 1024, 100, dtype=np.float64)
 
+    fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+    for ax, result, title in zip(axes, [r16, r32, r64], ['float16', 'float32', 'float64 (ref)']):
+        ax.imshow(result, cmap='hot')
+        ax.set_title(title); ax.axis('off')
+    plt.savefig('precision_comparison.png', dpi=150)
+    print(f"Max diff float32 vs float 64: {np.abs(r32-r64).max()}")
+    print(f"Max diff float16 vs float 64: {np.abs(r16-r64).max()}")
