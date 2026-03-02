@@ -1,7 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import time, statistics 
+from numba import njit
 import cProfile, pstats
+
+
 class mandelbrot:
     
     #This is the old benchmarking implementation. Check cProfile for current implementation
@@ -16,9 +19,9 @@ class mandelbrot:
         print(f"For function {func}:"
             f"Median: {median_t :.4f}s "
             f"(min={min(times):.4f}, max={max(times):.4f}")
-        return median_t, result
+        return median_t
 
-    @profile
+    # @profile
     def mandelbrot_naive (self, xmin , xmax , ymin , ymax , width , height , max_iter =100) :
         x = np . linspace ( xmin , xmax , width )
         y = np . linspace ( ymin , ymax , height )
@@ -50,7 +53,7 @@ class mandelbrot:
         im = np.linspace(ymin,ymax, density )
         return re[np.newaxis, :] + im[:, np.newaxis] * 1j
         
-    @profile
+    # @profile
     def mandelbrot_numpy(self, c, max_iter):
         z = np.zeros_like(c)
         iteration_counts = np.zeros(c.shape)
@@ -63,10 +66,40 @@ class mandelbrot:
         
         return iteration_counts
 
+    @njit
+    def mandelbrot_numba_naive(self, xmin, xmax, ymin, ymax, width, height, max_iter):
+        x = np.linspace(xmin, xmax, width)
+        y = np.linspace(ymin, ymax, height)
+        result = np.zeros((height, width), dtype = np.int32)
+        for i in range(height):
+            for j in range(width):
+                c = x[j] + 1j * y[i]
+                z = 0j
+                n = 0
+                while n < max_iter and \
+                    z.real*z.real+z.imag*z.imag <= 4.0:
+                    z = z*z + c; n +=1
+                result[i,j] = n
+        return result
 
-    def mandelbrot_numba(self, c, max_iter):
-        pass
-        return
+    @njit
+    def mandelbrot_point_numba(self, c, max_iter=100):
+        z = 0j
+        for n in range(max_iter):
+            if z.real*z.real + z.imag*z.imag > 4.0:
+                return n
+            z = z*z + c
+        return max_iter
+    
+    def mandelbrot_hybrid(self, xmin, xmax, ymin, ymax, height, width, max_iter=100):
+        x = np.linspace(xmin, xmax, width)
+        y = np.linspace(ymin, ymax, height)
+        result = np.zeros((height, width), dtype = np.int32)
+        for i in range(height):
+            for j in range(width):
+                c = x[j] + 1j * y[i]
+                result[i,j] = mb.mandelbrot_point_numba(c, max_iter)
+
 
 if __name__ == "__main__":
 
@@ -81,15 +114,15 @@ if __name__ == "__main__":
     #t, iterations = mb.benchmark(mb.mandelbrot_numpy, (c, 100), n_runs=5) #Runs mandelbrot algo 5 times 
     
     #Uncomment for Line_profile
-    mb.mandelbrot_numpy(c,100)
-    mb.mandelbrot_naive(-2, 1, -1.5, 1.5, 1024, 1024, 100)
+    # mb.mandelbrot_numpy(c,100)
+    # mb.mandelbrot_naive(-2, 1, -1.5, 1.5, 1024, 1024, 100)
 
     #UnComment for cProfile use
-    # cprofile.run('mb.mandelbrot_numpy (c,100)', 'numpy_profile.prof')
-    # cprofile.run('mb.mandelbrot_naive (-2, 1, -1.5, 1.5, 1024, 1024, 100)', 'naive_profile.prof')
+    # cProfile.run('mb.mandelbrot_numpy (c,100)', 'numpy_profile.prof')
+    # cProfile.run('mb.mandelbrot_naive (-2, 1, -1.5, 1.5, 1024, 1024, 100)', 'naive_profile.prof')
     #
     # for name in ('numpy_profile.prof', 'naive_profile.prof'):
-    #     stats = pstats.stats(name)
+    #     stats = pstats.Stats(name)
     #     stats.sort_stats('cumulative')
     #     stats.print_stats(10)
 
@@ -103,3 +136,83 @@ if __name__ == "__main__":
     #plt.ylabel('Imaginary')
     #plt.savefig('mandelbrot_colormap.png', dpi=300)
     #plt.show()
+
+
+    #With my current implementation i cannot use numbas njit, as it can not handle python objects
+    # Numba implementations
+    def mandelbrot_naive (xmin , xmax , ymin , ymax , width , height , max_iter =100) :
+        x = np . linspace ( xmin , xmax , width )
+        y = np . linspace ( ymin , ymax , height )
+        result = np . zeros (( height , width ) , dtype = int )
+        for i in range ( height ) :
+            for j in range ( width ) :
+                c = x [ j ] + 1j * y [ i ]
+                z = 0
+            for n in range ( max_iter ) :
+                if abs ( z ) > 2:
+                    result [i , j ] = n
+                    break
+                z = z * z + c
+            else :
+                result [i , j ] = max_iter
+        return result
+
+    def mandelbrot_numpy(c, max_iter):
+        z = np.zeros_like(c)
+        iteration_counts = np.zeros(c.shape)
+        
+        for i in range(max_iter):
+            mask = np.abs(z) <= 2  # Points that haven't escaped yet
+            z[mask] = z[mask] ** 2 + c[mask]
+            iteration_counts[mask] += 1 
+        
+        return iteration_counts
+
+    @njit
+    def mandelbrot_numba_naive(xmin, xmax, ymin, ymax, width, height, max_iter):
+        x = np.linspace(xmin, xmax, width)
+        y = np.linspace(ymin, ymax, height)
+        result = np.zeros((height, width), dtype = np.int32)
+        for i in range(height):
+            for j in range(width):
+                c = x[j] + 1j * y[i]
+                z = 0j
+                n = 0
+                while n < max_iter and \
+                    z.real*z.real+z.imag*z.imag <= 4.0:
+                    z = z*z + c; n +=1
+                result[i,j] = n
+        return result
+
+    @njit
+    def mandelbrot_point_numba(c, max_iter=100):
+        z = 0j
+        for n in range(max_iter):
+            if z.real*z.real + z.imag*z.imag > 4.0:
+                return n
+            z = z*z + c
+        return max_iter
+    
+    def mandelbrot_hybrid(xmin, xmax, ymin, ymax, height, width, max_iter=100):
+        x = np.linspace(xmin, xmax, width)
+        y = np.linspace(ymin, ymax, height)
+        result = np.zeros((height, width), dtype = np.int32)
+        for i in range(height):
+            for j in range(width):
+                c = x[j] + 1j * y[i]
+                result[i,j] = mandelbrot_point_numba(c, max_iter)
+
+
+    #Numba benchmarking for both implementations
+    mandelbrot_numba_naive(-2, 1, -1.5, 1.5, 1024, 1024, 100)
+    mandelbrot_hybrid(-2, 1, -1.5, 1.5, 1024, 1024, 100)
+
+    t_naive = mb.benchmark(mandelbrot_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+    t_numpy = mb.benchmark(mandelbrot_numpy, (c, 100))
+    t_full = mb.benchmark(mandelbrot_numba_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+    t_hybrid = mb.benchmark(mandelbrot_hybrid, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+
+    print(f" Naive:     {t_naive:.3f}s")
+    print(f" Numpy:       {t_numpy:.3f}s    ({t_naive/t_numpy:1f}x)")
+    print(f" Fully compiled:        {t_full:.3f}s       ({t_naive/t_full:.3f}x)")
+
