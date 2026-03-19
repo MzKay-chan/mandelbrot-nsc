@@ -224,17 +224,17 @@ if __name__ == "__main__":
         return result
 
     #Numba benchmarking for both implementations
-    # mandelbrot_numba_naive(-2, 1, -1.5, 1.5, 1024, 1024, 100)
-    # mandelbrot_hybrid(-2, 1, -1.5, 1.5, 1024, 1024, 100)
-    #
-    # t_naive = mb.benchmark(mandelbrot_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
-    # t_numpy = mb.benchmark(mandelbrot_numpy, (c, 100))
-    # t_full = mb.benchmark(mandelbrot_numba_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
-    # t_hybrid = mb.benchmark(mandelbrot_hybrid, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
-    #
-    # print(f" Naive:     {t_naive:.3f}s")
-    # print(f" Numpy:       {t_numpy:.3f}s    ({t_naive/t_numpy:1f}x)")
-    # print(f" Fully compiled:        {t_full:.3f}s       ({t_naive/t_full:.3f}x)")
+    mandelbrot_numba_naive(-2, 1, -1.5, 1.5, 1024, 1024, 100)
+    mandelbrot_hybrid(-2, 1, -1.5, 1.5, 1024, 1024, 100)
+
+    t_naive = mb.benchmark(mandelbrot_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+    t_numpy = mb.benchmark(mandelbrot_numpy, (c, 100))
+    t_full = mb.benchmark(mandelbrot_numba_naive, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+    t_hybrid = mb.benchmark(mandelbrot_hybrid, (-2, 1, -1.5, 1.5, 1024, 1024, 100), 5)
+
+    print(f" Naive:     {t_naive:.3f}s")
+    print(f" Numpy:       {t_numpy:.3f}s    ({t_naive/t_numpy:1f}x)")
+    print(f" Fully compiled:        {t_full:.3f}s       ({t_naive/t_full:.3f}x)")
 
     #Numba data type testing:
     for dtype in [np.float16, np.float32, np.float64]:
