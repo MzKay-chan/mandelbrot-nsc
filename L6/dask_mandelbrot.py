@@ -92,11 +92,10 @@ def plot_chunk_sweep(chunk_counts, wall_times, lifs, t_serial, n_workers):
 
 
 if __name__ == "__main__":
-    N, max_iter = 1024, 100
+    N, max_iter = 8192, 100
     X_MIN, X_MAX, Y_MIN, Y_MAX = -2.5, 1.0, -1.25, 1.25
 
-    cluster = LocalCluster()         
-    client  = Client(cluster)
+    client  = Client("tcp://10.92.1.226:8786")
     n_workers = len(client.scheduler_info()['workers'])
     print(f"Cluster: {n_workers} workers")
 
